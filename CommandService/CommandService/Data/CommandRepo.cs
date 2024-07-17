@@ -1,5 +1,6 @@
 ﻿using Azure.Core;
 using CommandService.Models;
+using System;
 
 namespace CommandService.Data
 {
@@ -25,6 +26,11 @@ namespace CommandService.Data
                 throw new ArgumentNullException(nameof(platform));
             _context.Platforms.Add(platform);
 
+        }
+
+        public bool ExternalPlatformExist(int externalPlatformId)
+        {
+            return _context.Platforms.Any(p => p.ExternalId == externalPlatformId);
         }
 
         public IEnumerable<Platform> GetAllPlatforms()

@@ -11,6 +11,7 @@ namespace PlatformService.Profiles
             // Source(DB Model) -> Target (DTO)
             CreateMap<Platform, PlatformReadDto>(); // the mapping fields have the same hence, no need to map fields explicitly 
             CreateMap<PlatformCreateDto, Platform>();
+            CreateMap<PlatformReadDto, PlatformPublishedDto>();
         }
     }
 }

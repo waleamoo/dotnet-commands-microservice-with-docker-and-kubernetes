@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using PlatformService.AsyncDataServices;
 using PlatformService.Data;
 using PlatformService.SyncDataServices.Http;
 
@@ -28,6 +29,9 @@ builder.Services.AddScoped<IPlatformRepo, PlatformRepo>();
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 // register the Http client factory 
 builder.Services.AddHttpClient<ICommandDataClient, HttpCommandDataClient>();
+// add RabbitMQ message bus 
+builder.Services.AddSingleton<IMessageBusClient, MessageBusClient>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
