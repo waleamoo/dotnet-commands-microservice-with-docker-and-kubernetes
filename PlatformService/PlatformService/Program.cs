@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using PlatformService.AsyncDataServices;
 using PlatformService.Data;
+using PlatformService.SyncDataServices.Grpc;
 using PlatformService.SyncDataServices.Http;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -31,6 +32,8 @@ builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddHttpClient<ICommandDataClient, HttpCommandDataClient>();
 // add RabbitMQ message bus 
 builder.Services.AddSingleton<IMessageBusClient, MessageBusClient>();
+// add grpc for dependency injection 
+builder.Services.AddGrpc();
 
 var app = builder.Build();
 
@@ -46,6 +49,16 @@ if (app.Environment.IsDevelopment())
 app.UseAuthorization();
 
 app.MapControllers();
+// add the grpc endpoint 
+app.UseEndpoints(endpoints =>
+{
+    endpoints.MapControllers();
+    endpoints.MapGrpcService<GrpcPlatformService>();
+    endpoints.MapGet("/protos/platforms.protos", async context =>
+    {
+        await context.Response.WriteAsync(File.ReadAllText("Protos/plaforms.proto"));
+    });
+});
 // call the static class - to apply migrations 
 PrepDb.PrePopulation(app, builder.Environment.IsProduction());
 

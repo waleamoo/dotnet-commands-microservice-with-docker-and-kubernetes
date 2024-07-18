@@ -1,5 +1,7 @@
 ﻿using AutoMapper;
+using CommandService.Data;
 using CommandService.Dtos;
+using CommandService.Models;
 using System.Text.Json;
 
 namespace CommandService.EventProcessing
@@ -16,7 +18,17 @@ namespace CommandService.EventProcessing
         }
         public void ProcessEvent(string message)
         {
-            throw new NotImplementedException();
+            var eventType = DetermineEvent(message);
+            switch (eventType)
+            {
+                case EventType.PlatformPublished:
+                    AddPlatform(message);
+                    break;
+                case EventType.Undetermined:
+                    break;
+                default:
+                    break;
+            }
         }
 
         private EventType DetermineEvent(string notificationMessage) 
@@ -33,6 +45,34 @@ namespace CommandService.EventProcessing
                     Console.WriteLine("--> Could not determine event type");
                     return EventType.Undetermined;
                     break;
+            }
+        }
+
+        private void AddPlatform(string platformPublishedMessage)
+        {
+            using (var scope = _scopeFactory.CreateScope())
+            {
+                var repo = scope.ServiceProvider.GetRequiredService<ICommandRepo>();
+                var platformPublishedDto = JsonSerializer.Deserialize<PlatformPublishedDto>(platformPublishedMessage);
+                try
+                {
+                    var plat = _mapper.Map<Platform>(platformPublishedDto);
+                    if (!repo.ExternalPlatformExist(plat.ExternalId))
+                    {
+                        repo.CreatePlatform(plat);
+                        repo.SaveChanges();
+                        Console.WriteLine($"--> Platform added...");
+
+                    }
+                    else
+                    {
+                        Console.WriteLine($"--> Platform already exists...");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Could not add platform to DB {ex.Message}");
+                }
             }
         }
     }

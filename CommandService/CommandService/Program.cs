@@ -1,4 +1,7 @@
+using CommandService.AsyncDataServices;
 using CommandService.Data;
+using CommandService.EventProcessing;
+using CommandService.SyncDataServices.Grpc;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -14,6 +17,11 @@ builder.Services.AddDbContext<AppDbContext>(options => options.UseInMemoryDataba
 // register automapper 
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddScoped<ICommandRepo, CommandRepo>();
+builder.Services.AddSingleton<IEventProcessor, EventProcessor>();
+// add the background service 
+builder.Services.AddHostedService<MessageBusSubscriber>();
+// add data client service 
+builder.Services.AddScoped<IPlatformDataClientService, PlatformDataClientService>();
 
 var app = builder.Build();
 
@@ -29,5 +37,8 @@ if (app.Environment.IsDevelopment())
 app.UseAuthorization();
 
 app.MapControllers();
+
+// seed the platforms 
+PrepDb.PrepPopulation(app);
 
 app.Run();
